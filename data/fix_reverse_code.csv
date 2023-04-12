@@ -1,0 +1,265 @@
+var_desc,original_varname,new_varname,is_reverse,clean_var_desc
+"The following page contains phrases describing people's behaviors. Please use the rating scale next to each phrase to describe how accurately each statement describes you. 
+ 
+
+Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. 
+ 
+
+So that you can describe yourself in an honest manner, your responses will be kept in absolute confidence. Please read each statement carefully, and then click the circle that corresponds to the accuracy of the statement. - Worry about things.",N1_1,N1_1,,Worry about things.
+"The following page contains phrases describing people's behaviors. Please use the rating scale next to each phrase to describe how accurately each statement describes you. 
+ 
+
+Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. 
+ 
+
+So that you can describe yourself in an honest manner, your responses will be kept in absolute confidence. Please read each statement carefully, and then click the circle that corresponds to the accuracy of the statement. - Fear for the worst.",N1_2,N1_2,,Fear for the worst.
+"The following page contains phrases describing people's behaviors. Please use the rating scale next to each phrase to describe how accurately each statement describes you. 
+ 
+
+Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. 
+ 
+
+So that you can describe yourself in an honest manner, your responses will be kept in absolute confidence. Please read each statement carefully, and then click the circle that corresponds to the accuracy of the statement. - Am afraid of many things.",N1_3,N1_3,,Am afraid of many things.
+"The following page contains phrases describing people's behaviors. Please use the rating scale next to each phrase to describe how accurately each statement describes you. 
+ 
+
+Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. 
+ 
+
+So that you can describe yourself in an honest manner, your responses will be kept in absolute confidence. Please read each statement carefully, and then click the circle that corresponds to the accuracy of the statement. - Get stressed out easily.",N1_4,N1_4,,Get stressed out easily.
+"The following page contains phrases describing people's behaviors. Please use the rating scale next to each phrase to describe how accurately each statement describes you. 
+ 
+
+Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. 
+ 
+
+So that you can describe yourself in an honest manner, your responses will be kept in absolute confidence. Please read each statement carefully, and then click the circle that corresponds to the accuracy of the statement. - Get angry easily.",N2_1,N2_1,,Get angry easily.
+"The following page contains phrases describing people's behaviors. Please use the rating scale next to each phrase to describe how accurately each statement describes you. 
+ 
+
+Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. 
+ 
+
+So that you can describe yourself in an honest manner, your responses will be kept in absolute confidence. Please read each statement carefully, and then click the circle that corresponds to the accuracy of the statement. - Get irritated easily.",N2_2,N2_2,,Get irritated easily.
+"The following page contains phrases describing people's behaviors. Please use the rating scale next to each phrase to describe how accurately each statement describes you. 
+ 
+
+Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. 
+ 
+
+So that you can describe yourself in an honest manner, your responses will be kept in absolute confidence. Please read each statement carefully, and then click the circle that corresponds to the accuracy of the statement. - Lose my temper.",N2_3,N2_3,,Lose my temper.
+"The following page contains phrases describing people's behaviors. Please use the rating scale next to each phrase to describe how accurately each statement describes you. 
+ 
+
+Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. 
+ 
+
+So that you can describe yourself in an honest manner, your responses will be kept in absolute confidence. Please read each statement carefully, and then click the circle that corresponds to the accuracy of the statement. - Am not easily annoyed.",N2_4_R,N2_4_R,_R,Am not easily annoyed.
+"The following page contains phrases describing people's behaviors. Please use the rating scale next to each phrase to describe how accurately each statement describes you. 
+ 
+
+Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. 
+ 
+
+So that you can describe yourself in an honest manner, your responses will be kept in absolute confidence. Please read each statement carefully, and then click the circle that corresponds to the accuracy of the statement. - Often feel blue.",N3_1,N3_1,,Often feel blue.
+"The following page contains phrases describing people's behaviors. Please use the rating scale next to each phrase to describe how accurately each statement describes you. 
+ 
+
+Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. 
+ 
+
+So that you can describe yourself in an honest manner, your responses will be kept in absolute confidence. Please read each statement carefully, and then click the circle that corresponds to the accuracy of the statement. - Dislike myself.",N3_2,N3_2,,Dislike myself.
+"The following page contains phrases describing people's behaviors. Please use the rating scale next to each phrase to describe how accurately each statement describes you. 
+ 
+
+Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. 
+ 
+
+So that you can describe yourself in an honest manner, your responses will be kept in absolute confidence. Please read each statement carefully, and then click the circle that corresponds to the accuracy of the statement. - Am often down in the dumps.",N3_3,N3_3,,Am often down in the dumps.
+"The following page contains phrases describing people's behaviors. Please use the rating scale next to each phrase to describe how accurately each statement describes you. 
+ 
+
+Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. 
+ 
+
+So that you can describe yourself in an honest manner, your responses will be kept in absolute confidence. Please read each statement carefully, and then click the circle that corresponds to the accuracy of the statement. - Feel comfortable with myself.",N3_4_R,N3_4_R,_R,Feel comfortable with myself.
+"The following page contains phrases describing people's behaviors. Please use the rating scale next to each phrase to describe how accurately each statement describes you. 
+ 
+
+Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. 
+ 
+
+So that you can describe yourself in an honest manner, your responses will be kept in absolute confidence. Please read each statement carefully, and then click the circle that corresponds to the accuracy of the statement. - Find it difficult to approach others.",N4_1,N4_1,,Find it difficult to approach others.
+"The following page contains phrases describing people's behaviors. Please use the rating scale next to each phrase to describe how accurately each statement describes you. 
+ 
+
+Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. 
+ 
+
+So that you can describe yourself in an honest manner, your responses will be kept in absolute confidence. Please read each statement carefully, and then click the circle that corresponds to the accuracy of the statement. - Am afraid to draw attention to myself.",N4_2,N4_2,,Am afraid to draw attention to myself.
+"The following page contains phrases describing people's behaviors. Please use the rating scale next to each phrase to describe how accurately each statement describes you. 
+ 
+
+Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. 
+ 
+
+So that you can describe yourself in an honest manner, your responses will be kept in absolute confidence. Please read each statement carefully, and then click the circle that corresponds to the accuracy of the statement. - Only feel comfortable with friends.",N4_3,N4_3,,Only feel comfortable with friends.
+"The following page contains phrases describing people's behaviors. Please use the rating scale next to each phrase to describe how accurately each statement describes you. 
+ 
+
+Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. 
+ 
+
+So that you can describe yourself in an honest manner, your responses will be kept in absolute confidence. Please read each statement carefully, and then click the circle that corresponds to the accuracy of the statement. - Am not bothered by difficult social situations.",N4_4_R,N4_4_R,_R,Am not bothered by difficult social situations.
+"The following page contains phrases describing people's behaviors. Please use the rating scale next to each phrase to describe how accurately each statement describes you. 
+ 
+
+Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. 
+ 
+
+So that you can describe yourself in an honest manner, your responses will be kept in absolute confidence. Please read each statement carefully, and then click the circle that corresponds to the accuracy of the statement. - Go on binges.",N5_1,N5_1,,Go on binges.
+"The following page contains phrases describing people's behaviors. Please use the rating scale next to each phrase to describe how accurately each statement describes you. 
+ 
+
+Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. 
+ 
+
+So that you can describe yourself in an honest manner, your responses will be kept in absolute confidence. Please read each statement carefully, and then click the circle that corresponds to the accuracy of the statement. - Rarely overindulge.",N5_2_R,N5_2_R,_R,Rarely overindulge.
+"The following page contains phrases describing people's behaviors. Please use the rating scale next to each phrase to describe how accurately each statement describes you. 
+ 
+
+Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. 
+ 
+
+So that you can describe yourself in an honest manner, your responses will be kept in absolute confidence. Please read each statement carefully, and then click the circle that corresponds to the accuracy of the statement. - Easily resist temptations.",N5_3,N5_3_R,_R,Easily resist temptations.
+"The following page contains phrases describing people's behaviors. Please use the rating scale next to each phrase to describe how accurately each statement describes you. 
+ 
+
+Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. 
+ 
+
+So that you can describe yourself in an honest manner, your responses will be kept in absolute confidence. Please read each statement carefully, and then click the circle that corresponds to the accuracy of the statement. - Am able to control my cravings.",N5_4,N5_4_R,_R,Am able to control my cravings.
+"The following page contains phrases describing people's behaviors. Please use the rating scale next to each phrase to describe how accurately each statement describes you. 
+ 
+
+Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. 
+ 
+
+So that you can describe yourself in an honest manner, your responses will be kept in absolute confidence. Please read each statement carefully, and then click the circle that corresponds to the accuracy of the statement. - Panic easily.",N6_1,N6_1,,Panic easily.
+"The following page contains phrases describing people's behaviors. Please use the rating scale next to each phrase to describe how accurately each statement describes you. 
+ 
+
+Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. 
+ 
+
+So that you can describe yourself in an honest manner, your responses will be kept in absolute confidence. Please read each statement carefully, and then click the circle that corresponds to the accuracy of the statement. - Become overwhelmed by events.",N6_2,N6_2,,Become overwhelmed by events.
+"The following page contains phrases describing people's behaviors. Please use the rating scale next to each phrase to describe how accurately each statement describes you. 
+ 
+
+Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. 
+ 
+
+So that you can describe yourself in an honest manner, your responses will be kept in absolute confidence. Please read each statement carefully, and then click the circle that corresponds to the accuracy of the statement. - Feel that I'm unable to deal with things.",N6_3,N6_3,,Feel that I'm unable to deal with things.
+"The following page contains phrases describing people's behaviors. Please use the rating scale next to each phrase to describe how accurately each statement describes you. 
+ 
+
+Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. 
+ 
+
+So that you can describe yourself in an honest manner, your responses will be kept in absolute confidence. Please read each statement carefully, and then click the circle that corresponds to the accuracy of the statement. - Remain calm under pressure.",N6_4_R,N6_4_R,_R,Remain calm under pressure.
+agreeable - Trust others.,A1_1,A1_1,,Trust others.
+agreeable - Believe that others have good intentions.,A1_2,A1_2,,Believe that others have good intentions.
+agreeable - Trust what people say.,A1_3,A1_3,,Trust what people say.
+agreeable - Distrust people.,A1_4_R,A1_4_R,_R,Distrust people.
+agreeable - Use others for my own ends.,A2_1_R,A2_1_R,_R,Use others for my own ends.
+agreeable - Cheat to get ahead.,A2_2,A2_2_R,_R,Cheat to get ahead.
+agreeable - Take advantage of others.,A2_3,A2_3_R,_R,Take advantage of others.
+agreeable - Obstruct others' plans.,A2_4,A2_4_R,_R,Obstruct others' plans.
+agreeable - Am concerned about others.,A3_1,A3_1,,Am concerned about others.
+agreeable - Love to help others.,A3_2,A3_2,,Love to help others.
+agreeable - Am indifferent to the feelings of others.,A3_3_R,A3_3_R,_R,Am indifferent to the feelings of others.
+agreeable - Take no time for others.,A3_4,A3_4_R,_R,Take no time for others.
+agreeable - Love a good fight.,A4_1_R,A4_1_R,_R,Love a good fight.
+agreeable - Yell at people.,A4_2,A4_2_R,_R,Yell at people.
+agreeable - Insult people.,A4_3,A4_3_R,_R,Insult people.
+agreeable - Get back at others.,A4_4,A4_4_R,_R,Get back at others.
+agreeable - Believe that I am better than others.,A5_1_R,A5_1_R,_R,Believe that I am better than others.
+agreeable - Think highly of myself.,A5_2,A5_2_R,_R,Think highly of myself.
+agreeable - Have a high opinion of myself.,A5_3,A5_3_R,_R,Have a high opinion of myself.
+agreeable - Boast about my virtues.,A5_4,A5_4_R,_R,Boast about my virtues.
+agreeable - Sympathize with the homeless.,A6_1,A6_1,,Sympathize with the homeless.
+agreeable - Feel sympathy for those who are worse off than myself.,A6_2,A6_2,,Feel sympathy for those who are worse off than myself.
+agreeable - Am not interested in other people's problems.,A6_3_R,A6_3_R,_R,Am not interested in other people's problems.
+agreeable - Try not to think about the needy.,A6_4,A6_4_R,_R,Try not to think about the needy.
+extroversion - Make friends easily.,E1_1,E1_1,,Make friends easily.
+extroversion - Feel comfortable around people.,E1_2,E1_2,,Feel comfortable around people.
+extroversion - Avoid contacts with others.,E1_3_R,E1_3_R,_R,Avoid contacts with others.
+extroversion - Keep others at a distance.,E1_4,E1_4_R,_R,Keep others at a distance.
+extroversion - Love large parties.,E2_1,E2_1,,Love large parties.
+extroversion - Talk to a lot of different people at parties.,E2_2,E2_2,,Talk to a lot of different people at parties.
+extroversion - Prefer to be alone.,E2_3_R,E2_3_R,_R,Prefer to be alone.
+extroversion - Avoid crowds.,E2_4,E2_4_R,_R,Avoid crowds.
+extroversion - Take charge.,E3_1,E3_1,,Take charge.
+extroversion - Try to lead others.,E3_2,E3_2,,Try to lead others.
+extroversion - Take control of things.,E3_3,E3_3,,Take control of things.
+extroversion - Wait for others to lead the way.,E3_4_R,E3_4_R,_R,Wait for others to lead the way.
+extroversion - Am always busy.,E4_1,E4_1,,Am always busy.
+extroversion - Am always on the go.,E4_2,E4_2,,Am always on the go.
+extroversion - Do a lot in my spare time.,E4_3,E4_3,,Do a lot in my spare time.
+extroversion - Like to take it easy.,E4_4_R,E4_4_R,_R,Like to take it easy.
+extroversion - Love excitement.,E5_1,E5_1,,Love excitement.
+extroversion - Seek adventure.,E5_2,E5_2,,Seek adventure.
+extroversion - Enjoy being reckless.,E5_3,E5_3,,Enjoy being reckless.
+extroversion - Act wild and crazy.,E5_4,E5_4,,Act wild and crazy.
+extroversion - Radiate joy.,E6_1,E6_1,,Radiate joy.
+extroversion - Have a lot of fun.,E6_2,E6_2,,Have a lot of fun.
+extroversion - Love life.,E6_3,E6_3,,Love life.
+extroversion - Look at the bright side of life.,E6_4,E6_4,,Look at the bright side of life.
+open - Have a vivid imagination.,O1_1,O1_1,,Have a vivid imagination.
+open - Enjoy wild flights of fantasy.,O1_2,O1_2,,Enjoy wild flights of fantasy.
+open - Love to daydream.,O1_3,O1_3,,Love to daydream.
+open - Like to get lost in thought.,O1_4,O1_4,,Like to get lost in thought.
+open - Believe in the importance of art.,O2_1,O2_1,,Believe in the importance of art.
+open - See beauty in things that others might not notice.,O2_2,O2_2,,See beauty in things that others might not notice.
+open - Do not like poetry.,O2_3_R,O2_3_R,_R,Do not like poetry.
+open - Do not enjoy going to art museums.,O2_4,O2_4_R,_R,Do not enjoy going to art museums.
+open - Experience my emotions intensely.,O3_1,O3_1,,Experience my emotions intensely.
+open - Feel others' emotions.,O3_2,O3_2,,Feel others' emotions.
+open - Rarely notice my emotional reactions.,O3_3_R,O3_3_R,_R,Rarely notice my emotional reactions.
+open - Don't understand people who get emotional.,O3_4,O3_4_R,_R,Don't understand people who get emotional.
+open - Prefer variety to routine.,O4_1,O4_1,,Prefer variety to routine.
+open - Prefer to stick with things that I know.,O4_2_R,O4_2_R,_R,Prefer to stick with things that I know.
+open - Dislike changes.,O4_3,O4_3_R,_R,Dislike changes.
+open - Am attached to conventional ways.,O4_4,O4_4_R,_R,Am attached to conventional ways.
+open - Love to read challenging material.,O5_1,O5_1,,Love to read challenging material.
+open - Avoid philosophical discussions.,O5_2_R,O5_2_R,_R,Avoid philosophical discussions.
+open - Have difficulty understanding abstract ideas.,O5_3,O5_3_R,_R,Have difficulty understanding abstract ideas.
+open - Am not interested in theoretical discussions.,O5_4,O5_4_R,_R,Am not interested in theoretical discussions.
+open - Tend to vote for liberal political candidates.,O6_1,O6_1,,Tend to vote for liberal political candidates.
+open - Believe that there is no absolute right and wrong.,O6_2,O6_2,,Believe that there is no absolute right and wrong.
+open - Tend to vote for conservative political candidates.,O6_3_R,O6_3_R,_R,Tend to vote for conservative political candidates.
+open - Believe that we should be tough on crime.,O6_4,O6_4_R,_R,Believe that we should be tough on crime.
+conscientiousness - Complete tasks successfully.,C1_1,C1_1,,Complete tasks successfully.
+conscientiousness - Excel in what I do.,C1_2,C1_2,,Excel in what I do.
+conscientiousness - Handle tasks smoothly.,C1_3,C1_3,,Handle tasks smoothly.
+conscientiousness - Know how to get things done.,C1_4,C1_4,,Know how to get things done.
+conscientiousness - Like to tidy up.,C2_1,C2_1,,Like to tidy up.
+conscientiousness - Often forget to put things back in their proper place.,C2_2_R,C2_2_R,_R,Often forget to put things back in their proper place.
+conscientiousness - Leave a mess in my room.,C2_3,C2_3_R,_R,Leave a mess in my room.
+conscientiousness - Leave my belongings around.,C2_4,C2_4_R,_R,Leave my belongings around.
+conscientiousness - Keep my promises.,C3_1,C3_1,,Keep my promises.
+conscientiousness - Tell the truth.,C3_2,C3_2,,Tell the truth.
+conscientiousness - Break rules.,C3_3_R,C3_3_R,_R,Break rules.
+conscientiousness - Break my promises.,C3_4,C3_4_R,_R,Break my promises.
+conscientiousness - Do more than what's expected of me.,C4_1,C4_1,,Do more than what's expected of me.
+conscientiousness - Work hard.,C4_2,C4_2,,Work hard.
+conscientiousness - Put little time and effort into my work.,C4_3_R,C4_3_R,_R,Put little time and effort into my work.
+conscientiousness - Do just enough work to get by.,C4_4,C4_4_R,_R,Do just enough work to get by.
+conscientiousness - Am always prepared.,C5_1,C5_1,,Am always prepared.
+conscientiousness - Carry out my plans.,C5_2,C5_2,,Carry out my plans.
+conscientiousness - Waste my time.,C5_3_R,C5_3_R,_R,Waste my time.
+conscientiousness - Have difficulty starting tasks.,C5_4,C5_4_R,_R,Have difficulty starting tasks.
+conscientiousness - Jump into things without thinking.,C6_1_R,C6_1_R,_R,Jump into things without thinking.
+conscientiousness - Make rash decisions.,C6_2,C6_2_R,_R,Make rash decisions.
+conscientiousness - Rush into things.,C6_3,C6_3_R,_R,Rush into things.
+conscientiousness - Act without thinking.,C6_4,C6_4_R,_R,Act without thinking.

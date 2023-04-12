@@ -1,0 +1,31 @@
+original_name,junk,new_name
+N1, ANXIETY(Alpha = .78),anxiety
+N2, ANGER (.87),anger
+N3, DEPRESSION (.85),depression
+N4, SELF-CONSCIOUSNESS (.70),self-consciousness
+N5, IMMODERATION (.69),immoderation
+N6, VULNERABILITY (.76),vulnerability
+E1, FRIENDLINESS (.81),friendliness
+E2, GREGARIOUSNESS (.79),gregariousness
+E3, ASSERTIVENESS (.85),assertiveness
+E4, ACTIVITY LEVEL (.69),activity level
+E5, EXCITEMENT-SEEKING (.73),excitement-seeking
+E6, CHEERFULNESS (.79),cheerfulness
+O1, IMAGINATION (.74),imagination
+O2, ARTISTIC INTERESTS (.74),artistic interests
+O3, EMOTIONALITY (.65),emotionality
+O4, ADVENTUROUSNESS (.70),adventurousness
+O5, INTELLECT (.73),intellect
+O6, LIBERALISM (.63),liberalism
+A1, TRUST (.85),trust
+A2, MORALITY (.74),morality
+A3, ALTRUISM (.73),altruism
+A4, COOPERATION (.71),cooperation
+A5, MODESTY (.73),modesty
+A6, SYMPATHY (.72),sympathy
+C1, SELF-EFFICACY (.77),self-efficacy
+C2, ORDERLINESS (.83),orderliness
+C3, DUTIFULNESS (.67),dutifulness
+C4, ACHIEVEMENT-STRIVING (.79),achievement-striving
+C5, SELF-DISCIPLINE (.71),self-discipline
+C6, CAUTIOUSNESS (.88),cautiousness

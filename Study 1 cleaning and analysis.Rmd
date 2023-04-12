@@ -1,0 +1,1070 @@
+---
+title: "Big Five Employment Measures and ADHD"
+author: "Elisabeth R Silver"
+date: "10/19/2021"
+output:
+  word_document:
+      reference_doc: "style-ref.docx"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F)
+library(pacman)
+p_load(knitr,tidyverse,stringr,rstatix,psych,scales,
+       statstring,openxlsx,cowplot,lavaan,semTools)
+filter <- dplyr::filter
+select <- dplyr::select
+box_path <- "../../Library/CloudStorage/Box-Box/ADHD Employment/Study 1 code and data/output/"
+output <- "output/"
+#note-this is in a separate code file hidden from git because the scoring is proprietary
+#to override issues with file references, change the below line to: source("calculate_adhd_scores_public.R")
+source("calculate_adhd_scores.R")
+#calculate_adhd_scores_public.R simply sums the responses to the ADHD symptom questionnaire
+```
+
+## Read in and clean data
+
+```{r}
+#read in text data
+dft <- read.csv("data/big_five_text_12.03.21.csv")
+var_descr <- data.frame(t(dft[1,]))
+var_descr["original_varname"] <- rownames(var_descr)
+colnames(var_descr)<-c("var_desc", "original_varname")
+clean_variable_description <- function(original){
+  if(str_detect(original, " [-] ")){
+    start_loc = str_locate(original, " [-] ")[,2]+1
+    return(str_sub(original, start = start_loc))
+  }
+  else{
+    return(original)
+  }
+}
+var_descr["clean_var_desc"] <- sapply(var_descr$var_desc, clean_variable_description)
+write.csv(var_descr,"data/variable_name_list.csv")
+#first 2 rows are question descriptions
+dft <- dft[-c(1,2),]
+#next 3 rows are previews
+dft <- dft[-c(1,2,3),]
+
+#read in numeric data
+dfn <- read.csv("data/big_five_numeric_12.03.21.csv")
+#first 2 rows are question descriptions
+dfn <- dfn[-c(1,2),]
+#next 3 rows are previews
+dfn <- dfn[-c(1,2,3),]
+#we actually want the text responses for some of these variables
+text_vars <- dft %>% 
+  dplyr::select(gender, gender_4_TEXT,race,race_7_TEXT,adhd_yn,
+                education,employment,employment_5_TEXT,income,
+                ResponseId)
+num_vars <- dfn %>% 
+  dplyr::select(!c(gender, gender_4_TEXT,race,race_7_TEXT,adhd_yn,
+                education,employment,employment_5_TEXT,income))
+df <- left_join(num_vars, text_vars, by = "ResponseId")
+fix_reverse <- read.csv("data/fix_reverse_code.csv")
+#handle reverse-coding
+new_rev <- fix_reverse$original_varname
+names(new_rev) <- fix_reverse$new_varname
+df <- df %>% 
+  rename(!!!new_rev)
+reverse_cols <- fix_reverse$new_varname[str_ends(fix_reverse$new_varname, "_R")]
+fixed_r <- df %>% 
+  dplyr::select(all_of(c(reverse_cols, "ResponseId"))) %>% 
+  mutate(across(-ResponseId,
+                ~ 6 - as.numeric(.x))) %>% 
+  rename_with(~str_replace_all(.x, "_R", ""))
+df <- left_join(df, fixed_r, by = "ResponseId")
+#save the dataset
+write.csv(df, "data/cleaned_data.csv")
+```
+
+Re-read in the dataset, this time with numeric variables:
+
+```{r,results="asis"}
+
+df <- read.csv("data/cleaned_data.csv")
+screener_cols <- c("attn_1", "attn_2", "attn_3",
+                   "attn_4", "attn_5", "attn_6")
+
+df <- get_adhd_sums(df)
+pre_excl <- nrow(df)
+#remove anyone who didn't respond to any screener questions
+no_screener <- nrow(df %>% filter(is.na(asrs_sum)))
+df <- df %>% 
+  filter(!is.na(asrs_sum))
+no_resp <- nrow(df %>% filter(adhd_yn %in% c("No response", "", "Prefer not to say")))
+df <- df %>% 
+  filter(adhd_yn %in% c("No response", "", "Prefer not to say")==F)
+cat("Participants were recruited from the Rice University undergraduate subject pool. ")
+cat(paste0(" We excluded ", no_screener,
+           " participant who did not respond to any of the ADHD screener items and ",
+           no_resp, " participants who preferred not to report their ADHD status. "))
+cat(paste0("This resulted in a final sample of ", nrow(df), " participants. "))
+
+# cat(" The average (SD) score on the ASRS-5 was ")
+# cat(scales::number(mean(df$asrs_sum, na.rm = T), accuracy = .01))
+# cat(paste0(" (", scales::number(sd(df$asrs_sum, na.rm = T), accuracy = .01), "). "))
+
+df["adhd_screen"] <- df$asrs_sum >= 14
+
+#create personality composites
+five_traits <- c("O", "C","E", "A", "N")
+trait_labs <- c("open", "consc", "extr", "agree", "neur")
+#create overall Big 5 composites and facet composites
+for(i in 1:length(five_traits)){
+  comp_cols <- colnames(df %>% 
+                          dplyr::select(matches(paste0(five_traits[i], "\\d+[_]"))) %>% 
+                          select(-ends_with("_R")))
+  #print(comp_cols)
+  df[trait_labs[i]] <- rowMeans(df[,comp_cols], na.rm=T)
+  for(k in 1:6){
+    comp_cols <- colnames(df %>% 
+                          dplyr::select(matches(paste0(five_traits[i],k, "[_]")))%>% 
+                          select(-ends_with("_R")))
+    new_col <- paste0(five_traits[i],k)
+    #print(comp_cols)
+    df[new_col] <- rowMeans(df[,comp_cols], na.rm=T)
+  }
+  
+}
+#store a copy of df with original facet column names:
+df_og <- df
+#rename facet columns
+codes <- read.csv("data/codebook.csv")
+facets <- codes$original_name
+names(facets) <- codes$new_name
+df <- df %>% 
+  rename(!!!facets)
+df <- df[is.na(df$consc)==F,]
+#get racial identities allowing people to select multiple
+#group native/indigenous folks together
+df["race_newcodes"] <- ifelse(df$race_7_TEXT=="Aboriginal"|str_detect(df$race, "Native"),
+                            "Native Hawaiian, Native Alaskan, Native American, or Aboriginal",
+                            df$race)
+#add hispanic category, will group as latino and/or hispanic
+df$race_newcodes <- ifelse(df$race_7_TEXT=="Hispanic",
+                            str_c(df$race_newcodes, ", Hispanic"),
+                            df$race_newcodes)
+#assign people who self-described their race
+df$race_newcodes <- ifelse(df$race_7_TEXT=="Indian",
+                            "Indian",
+                            df$race_newcodes)
+df$race_newcodes <- ifelse(df$race_7_TEXT=="Middle Eastern",
+                            "Middle Eastern",
+                            df$race_newcodes)
+#create dummies to get percentages
+df["white"] <- str_detect(df$race_newcodes, "White")
+df["black"] <- str_detect(df$race_newcodes, "Black")
+df["asian"] <- str_detect(df$race_newcodes, "Asian")
+df["indian"] <- df$race_newcodes=="Indian"
+df["mideast"] <- df$race_newcodes=="Middle Eastern"
+df["latino_hispanic"] <- str_detect(df$race_newcodes, "(Latin|Hispanic)")
+df["nativeam"] <- str_detect(df$race_newcodes, "Native")
+df["prefer_not"] <- df$race_newcodes==""
+race_columns <- c("white", "black", "asian",
+                  "indian", "mideast", "latino_hispanic",
+                  "nativeam", "prefer_not")
+race_percent <- df %>% 
+  summarise(across(all_of(race_columns),
+                   ~sum(.x))) %>% 
+  mutate(across(everything(),
+                ~percent(.x/nrow(df), accuracy = 1)
+                )
+         ) %>% 
+  pivot_longer(everything())
+
+
+df["gender_recode"] <- case_when(
+  df$gender=="Man"~"men",
+  df$gender=="Woman"~"women",
+  df$gender=="Non-binary"~"non-binary",
+  df$gender=="My gender isn't listed above:"~"questioning"
+)
+
+
+gender_percent <- df %>% 
+  count(gender_recode) %>% 
+  arrange(desc(n)) %>% 
+  mutate(prop = scales::percent(n/nrow(df)))
+# for(i in 1:nrow(gender_percent)){
+#   cat(paste0(gender_percent$prop[i], " ", gender_percent$gender_recode[i], ", "))
+# }
+cat(paste0("The sample was mostly comprised of women (", gender_percent$prop[1], ") ",
+                  "and was racially diverse ("))
+
+for(i in 1:nrow(race_percent)){
+  if(i < nrow(race_percent)){
+    cat(paste0(race_percent$value[i], " ", race_percent$name[i], "; "))
+  }
+  else{
+    cat(paste0("and ", race_percent$value[i], " ", race_percent$name[i], ". "))
+  }
+}
+cat("Note that percentages sum to more than 100 because some participants selected more than one racial identity.")
+cat("). The average (SD) age was ")
+cat(paste0(number(mean(df$age,na.rm=T),accuracy=0.01), 
+          " (",
+          number(sd(df$age, na.rm=T), accuracy = 0.01),
+          "). "
+          )
+    )
+cat("  \n")
+```
+
+## ADHD Data
+
+
+To study the relationship between ADHD, the five major personality traits, and the six facets of conscientiousness, we first examined correlations between these variables and self-reported symptom severity on the screener questionnaire. Next, to examine group mean differences, we compared those who screened positive for ADHD on the symptom screener with those who did not. The majority of participants who disclosed that they had ADHD or were unsure indeed screened positive for ADHD. Surprisingly, over half of those who responded "No" screened positive for ADHD as well. This could be due to underdiagnosis in this population given that they must have maintained a high level of academic achievement to be admitted to the university. As such, a typical indicator of ADHD in children, poor scholastic achievement, was likely not present for many of the respondents. 
+
+```{r}
+yes <- nrow(df %>% filter(adhd_yn=="Yes"))
+yes_percent <- percent(nrow(df %>% filter(adhd_yn=="Yes"))/nrow(df))
+no <- nrow(df %>% filter(adhd_yn == "No"))
+unsure <- nrow(df %>% filter(adhd_yn=="Not sure"))
+```
+
+
+Although we had originally planned to compare mean levels of each trait across those who self-identified as having versus not having ADHD using an independent samples _t_-test, doing so was not practically feasible as only `r yes` out of `r nrow(df)` (`r yes_percent`) participants self-identified as having ADHD. For the purposes of this analysis, we grouped those who reported “Yes” ( _N_ = `r yes`) and “Not sure” ( _N_ = `r unsure`) into one group and those who reported “No” ( _N_ = `r no`) into another group. 
+
+
+
+```{r,results="asis"}
+adhd_vars <- var_descr %>% 
+  filter(str_detect(original_varname, "attn_"))
+adhd_alpha <- psych::alpha(df %>% select(starts_with("attn_")))
+
+#adhd_vars$clean_var_desc
+```
+
+
+
+```{r,include=F}
+df$adhd_yn[df$adhd_yn==""] <- "No response"
+p<-ggplot(df, aes(asrs_sum,fill=adhd_screen))+
+  geom_histogram(position="dodge",bins=10,colour="black")+
+  theme_bw()+
+  xlab("ADHD Symptom Severity Composite")+
+  ylab("Frequency")+
+  ggtitle("Histogram of ADHD Symptom Severity by Screen Status")+
+  labs(fill = "ADHD Screen")+
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank())+
+  theme(text=element_text(family="Times New Roman",size=12),
+        axis.text.x = element_text(size=12),
+        axis.text.y = element_text(size=12),
+        legend.text = element_text(size=12))
+print(p)
+p<-ggplot(df, aes(asrs_sum,fill=adhd_yn))+
+  geom_histogram(position="dodge",bins=10,colour="black")+
+  theme_bw()+
+  xlab("ADHD Symptom Severity")+
+  ylab("Frequency")+
+  ggtitle("Study 1: ADHD Symptom Severity by Self-ID")+
+  labs(fill = "ADHD Self-ID")+
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank())+
+  theme(text=element_text(family="Times New Roman",size=12),
+        axis.text.x = element_text(size=12),
+        axis.text.y = element_text(size=12),
+        legend.text = element_text(size=12))
+print(p)
+save_plot(paste0(output,"adhd_sx_screener.png"), p)
+```
+
+```{r,results='asis'}
+cat("There was a signficant difference in ADHD symptom severity by ADHD self-identification, ")
+asrs_comp <- df %>% 
+  anova_test(asrs_sum~adhd_yn, type= 3, effect.size = "pes")
+format_anova_string(get_anova_table(asrs_comp))
+
+cat(". ")
+
+```
+
+```{r}
+df %>% tukey_hsd(asrs_sum~adhd_yn)
+```
+
+```{r}
+df %>% 
+  group_by(adhd_yn) %>% 
+  summarise(paste0(
+    number(mean(asrs_sum), accuracy = .1),
+    " (",
+    number(sd(asrs_sum), accuracy = .1),
+    ")"
+  ))
+```
+
+
+## Big five traits
+
+Alpha reliabilities for Big 5:
+
+```{r,results="asis"}
+
+consc_codes <- codes %>% filter(str_starts(original_name, "C"))
+#consc_codes<-c("consc",consc_codes$new_name)
+for(i in 1:6){
+  tmp <- df %>% 
+    select(starts_with(consc_codes$original_name[i])) %>% 
+    select(-ends_with("_R"))
+  #print(colnames(tmp))
+  catmp <- psych::alpha(tmp)
+  #print(catmp)
+  #cat("  \n Alpha if dropped statistics:  \n")
+  #print(catmp$alpha.drop %>% select(raw_alpha))
+  this_ca <- catmp$total$raw_alpha[1]
+  cat("  \n")
+  cat(paste0(consc_codes$new_name[i], " ",
+             "Cronbach's $\\alpha$ = ", 
+             number(this_ca, accuracy = .01),
+             "  \n"))
+}
+
+trait_prefixes <- c("C", "N", "O", "E", "A")
+pretty_traits <- c("Conscientiousness", "Neuroticism",
+                   "Openness", "Extraversion",
+                   "Agreeableness")
+for(i in 1:5){
+  tmp <- df %>% 
+    dplyr::select(matches(paste0(trait_prefixes[i], "\\d+[_]"))) %>% 
+                          select(-ends_with("_R"))
+  #print(colnames(tmp))
+  catmp <- psych::alpha(tmp)
+  this_ca <- catmp$total$raw_alpha[1]
+  cat(paste0(pretty_traits[i], " ",
+             "Cronbach's $\\alpha$ = ", 
+             number(this_ca, accuracy = .01),
+             "  \n"))
+}
+
+```
+
+# Get correlations
+
+Look at correlations between ADHD composite and traits and facets:
+
+```{r}
+cor_vars <- df %>% 
+  select(all_of(c("asrs_sum",
+                "age", "open", "extr", "agree", "neur", "consc",
+                consc_codes$new_name)))
+#cor.plot(cor_vars)
+```
+
+
+```{r,results="asis"}
+format_corrs <- function(data_mat){
+  out = Hmisc::rcorr(as.matrix(data_mat))
+  cors = apply(out$r, 1,FUN=function(x){str_replace(scales::number(x,
+                                                       accuracy=0.01),
+                                                   "0.", ".")})
+  pvals = out$P
+  for(i in 1:nrow(cors)){
+    for(j in 1:ncol(cors)){
+      if(is.na(pvals[i,j])==F){
+        cors[i, j] = paste0(cors[i,j], statstring::format_sig_stars(pvals[i,j]))
+      }
+      
+    }
+  }
+  return(cors)
+}
+#format correlations to make table 1
+cor_outs <- format_corrs(cor_vars)
+cor_outs <- data.frame(cor_outs)
+cor_outs[upper.tri(cor_outs,diag=T)] <- ""
+cor_outs["name"] <- colnames(cor_outs)
+cor_outs$name <- str_replace_all(cor_outs$name, "[.]", "-")
+cor_outs <- as_tibble(cor_outs)
+#table the means and SDs
+var_means_sds <- cor_vars %>% 
+  summarise(across(everything(),
+                   list(M = ~scales::number(mean(.x, na.rm=T),
+                                                   accuracy=0.01),
+                        SD = ~scales::number(sd(.x, na.rm=T),
+                                                   accuracy = 0.01))
+                   )
+            ) 
+#get means
+var_means_piv <- var_means_sds %>% 
+  select(ends_with("_M")) %>% 
+  pivot_longer(cols=everything()) %>% 
+  rename(M = value) %>% 
+  mutate(name = str_remove(name, "_M"))
+#get SDs
+var_means_piv <- var_means_sds %>% 
+  select(ends_with("_SD")) %>% 
+  pivot_longer(cols=everything()) %>% 
+  rename(SD = value) %>% 
+  mutate(name = str_remove(name, "_SD")) %>% 
+  left_join(var_means_piv, by = "name")
+#join means and SDs with correlations
+var_means_piv <- left_join(var_means_piv, cor_outs, by = "name")
+var_means_piv$name <- str_to_title(var_means_piv$name)#add the variable names as new column
+var_means_piv["name_1"] <- paste0(1:nrow(var_means_piv), ". ",
+                                  var_means_piv$name)
+colnames(var_means_piv) <- c("name", "SD", "M", as.character(1:nrow(var_means_piv)),
+                             "name_1")
+var_means_piv <- var_means_piv %>% 
+  select(name_1, M, SD, all_of(as.character(1:nrow(var_means_piv))),name)
+headerStyle <- createStyle(
+  fontSize = 12, fontName = "Times New Roman", halign = "center",
+  border = "bottom"
+)
+headerStyleIt <- createStyle(
+  fontSize = 12, fontName = "Times New Roman", halign = "center",
+  border = "bottom", textDecoration = 'italic'
+)
+col1HeaderStyle <- createStyle(
+  fontSize = 12, fontName = "Times New Roman",border = "bottom", halign = "left"
+)
+bodyStyle <- createStyle(
+  fontSize = 12, fontName = "Times New Roman", halign = "center"
+)
+col1Style <- createStyle(
+  fontSize = 12, fontName = "Times New Roman", halign = "left"
+)
+itStyle <- createStyle(
+  fontSize = 12, fontName = "Times New Roman", halign='left',
+  textDecoration = 'italic'
+)
+
+saveFmtdReg <- function(regDf, sheetName, fname){
+  wb<-createWorkbook(sheetName)
+  addWorksheet(wb,"sheet1",gridLines = F)
+  writeData(wb,sheet=1,regDf)
+  addStyle(wb,sheet=1,headerStyle, rows=1, cols=c(1,4:ncol(regDf)))
+  addStyle(wb,sheet=1,headerStyleIt, rows=1, cols=c(2,3))
+  addStyle(wb,sheet=1,bodyStyle, 
+           rows=1:nrow(regDf)+1, 
+           cols = 2:ncol(regDf),
+           gridExpand = T)
+  addStyle(wb, sheet = 1, col1HeaderStyle,
+           rows = 1, cols = 1)
+  addStyle(wb,sheet=1,col1Style, 
+           rows=1:nrow(regDf)+1, 
+           cols=1)
+  saveWorkbook(wb, paste0(fname, ".xlsx"), overwrite=T)
+}
+
+saveFmtdReg(var_means_piv,"tab1", paste0(output, "table1"))
+relevant_cors <- var_means_piv %>% select(name, `1`)
+cor_vals <- Hmisc::rcorr(as.matrix(cor_vars))
+raw_corrs <- cor_vals$r
+ps <- cor_vals$P
+raw_corrs <- raw_corrs[1,]
+ps <- ps[1,]
+
+for(i in 2:nrow(relevant_cors)){
+  if(raw_corrs[i]<0){
+    direction <- "negatively"
+  }else{
+    direction <- "positively"
+  }
+  if(ps[i] >0.05){
+    direction<- "not significantly"
+  }
+  cat(paste0("ADHD symptom severity was ", direction, 
+             " associated with ", 
+             relevant_cors$name[i], ", ",
+             format_corr_apa(raw_corrs[i],nrow(df)-2,ps[i])))
+  cat("  \n")
+}
+```
+
+# Compare means
+
+Look at means on conscientiousness facets:
+
+```{r,results="asis"}
+df["adhd_grp"] <- ifelse(df$adhd_yn == "No",
+                         "Non-ADHD", "ADHD")
+df$adhd_grp <- factor(df$adhd_grp, levels = c("ADHD", "Non-ADHD"))
+grpd_means <- df %>%
+  group_by(adhd_grp) %>%
+  summarise(mean(asrs_sum, na.rm=T),
+            n(),
+            mean(consc, na.rm=T),
+            mean(`self-efficacy`,na.rm=T),
+            mean(orderliness,na.rm=T),
+            mean(dutifulness,na.rm=T),
+            mean(`self-discipline`, na.rm=T))
+
+trait_recode <- list(open="Openness",
+                        consc = "Conscientiousness",
+                        extr = "Extraversion",
+                        neur = "Neuroticism",
+                        agree = "Agreeableness")
+trait_rev <- names(trait_recode)
+names(trait_rev) <- trait_recode
+
+consc_codes <- codes %>% filter(str_starts(original_name, "C"))
+consc_codes<-c(trait_labs,consc_codes$new_name)
+
+outs <- data.frame(varname=consc_codes,
+                   Variable = rep("", length(consc_codes)),
+                   formattedstat = rep("", length(consc_codes)),
+                   tvalnodiff = rep("", length(consc_codes)),
+                   d = rep("", length(consc_codes)),
+                   sig.stars = rep("",length(consc_codes)),
+                   mdiff = rep("",length(consc_codes)))
+tracker <- 1
+for(i in consc_codes){
+  tmp_t <- t.test(df[[i]]~df$adhd_grp, var.equal=T)
+  cohd <- psych::cohen.d(df[[i]], df$adhd_grp)
+  if(tmp_t$p.value<0.05){
+    
+    if(tmp_t$statistic < 0){
+      cat(paste0("People in the ADHD group scored significantly lower than people in the non-ADHD group on ", i, ", ", format_tstat_apa(tmp_t, cohen_d = cohd$cohen.d[2])))
+      cat("  \n")
+    }
+    else{
+      cat(paste0("People in the ADHD group scored significantly higher than people in the non-ADHD group on ", i, ", ", format_tstat_apa(tmp_t, cohen_d = cohd$cohen.d[2])))
+      cat("  \n")
+    }
+    
+  }
+  else{
+    cat(paste0("People in the ADHD group reported similar scores on ", i, " relative to the non-ADHD group, ", format_tstat_apa(tmp_t, cohen_d = cohd$cohen.d[2])))
+    cat("  \n")
+  }
+  if(i %in% names(trait_recode)){
+    outs$Variable[tracker] <- trait_recode[[i]]
+  }
+  else{
+    outs$Variable[tracker] <- str_to_title(i)
+  }
+  fmt_stat <- format_tstat_apa(tmp_t,cohen_d = cohd$cohen.d[2])
+  outs$formattedstat[tracker] <- fmt_stat
+  cut1 <- str_locate(fmt_stat, " M~d")[1]
+  cut2 <- str_locate(fmt_stat, "_d")[1]
+  new_fmtstat <- paste0(str_sub(fmt_stat, start = 1,end=cut1),
+                        str_sub(fmt_stat, start = cut2))
+  new_fmtstat <- str_replace_all(new_fmtstat, "_", "")
+  
+  outs$tvalnodiff[tracker] <- new_fmtstat
+  outs$d[tracker] <- paste0(number(cohd$cohen.d[2], accuracy = 0.01), format_sig_stars(tmp_t$p.value))
+  outs$sig.stars[tracker] <- format_sig_stars(tmp_t$p.value)
+  cut1 <- str_locate(fmt_stat, " CI[)] = ")[2]+1
+  cut2 <- str_locate(fmt_stat, ", _d")[1] -1
+  outs$mdiff[tracker] <- paste0(str_sub(fmt_stat, start = cut1,end=cut2))
+  tracker <- tracker + 1
+}
+```
+
+
+```{r}
+trait_recode <- list(open="Openness",
+                        consc = "Conscientiousness",
+                        extr = "Extraversion",
+                        neur = "Neuroticism",
+                        agree = "Agreeableness")
+trait_rev <- names(trait_recode)
+names(trait_rev) <- trait_recode
+consc_codes <- codes %>% filter(str_starts(original_name, "C"))
+pretty_data <- df %>% 
+  rename(!!!trait_rev) %>% 
+  rename_with(str_to_title, .cols=all_of(consc_codes$new_name)) %>% 
+  select(c(names(trait_rev), str_to_title(consc_codes$new_name), "adhd_grp")) %>% 
+  pivot_longer(cols = -adhd_grp) %>% 
+  group_by(adhd_grp, name) %>% 
+  summarise(across(everything(), 
+                   list(
+                     m = ~mean(.x, na.rm=T), 
+                     s = ~sd(.x, na.rm=T)))) %>% 
+  mutate(`Mean (SD)` = str_c(number(value_m, accuracy = 0.01), 
+                             " (", number(value_s, accuracy = 0.01), ")")) %>% 
+  select(adhd_grp, name, `Mean (SD)`)
+avg_scores <- data.frame(t(pretty_data %>% 
+                             pivot_wider(id_cols = adhd_grp,
+                            values_from = `Mean (SD)`)))
+avg_scores["Variable"] <- rownames(avg_scores)
+colnames(avg_scores) <- c("ADHD Group", "Non-ADHD Group", "Variable")
+avg_scores <- avg_scores %>% 
+  select(all_of(c("Variable", "ADHD Group", "Non-ADHD Group")))
+avg_scores <- avg_scores %>% 
+  left_join(outs %>% 
+              select(Variable, `d`),
+            by = "Variable")
+
+saveFmtdReg(avg_scores, "means", paste0(output, "means_diffs"))
+
+#knitr::kable(avg_scores)
+```
+
+
+# Plot conscientiousness facet scores
+
+Plots for Brown Bag:
+
+```{r}
+p<-ggplot(df, aes(asrs_sum,fill=adhd_yn))+
+  geom_histogram(position="dodge",bins=10,colour="black")+
+  theme_bw()+
+  xlab("ADHD Symptom Severity")+
+  ylab("Frequency")+
+  ggtitle("Histogram of ADHD Symptom Severity by Self-ID")+
+  labs(fill = "ADHD Self-ID")+
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank())+
+  theme(text=element_text(family="Times New Roman",size=14),
+        axis.text.x = element_text(size=14),
+        axis.text.y = element_text(size=14),
+        legend.text = element_text(size=14))+
+  theme(legend.position = "bottom")+
+  scale_fill_manual("ADHD Self-ID", 
+                    values = c("No" = "#F5B041", "Yes" = "#117864", "Not sure" = "#48C9B0"))
+print(p)
+save_plot(paste0(output,"adhd_sx_screener.png"), p)
+```
+
+
+```{r,fig.height=6,fig.width=7}
+consc_codes <- codes %>% filter(str_starts(original_name, "C"))
+longer_df <- df %>% 
+  select(adhd_grp, all_of(c("consc",consc_codes$new_name))) %>% 
+  pivot_longer(cols=all_of(c("consc",consc_codes$new_name))) %>% 
+  mutate(Variable = str_to_title(name),
+         Variable = str_replace(Variable, "Consc", "Conscientiousness"),
+         `ADHD Group` = adhd_grp,
+         Mean = value)
+
+shorter_vars <- list(Conscientiousness = "Global Consc.",
+                     `Achievement-Striving` = "Achvmnt",
+                     `Self-Discipline` = "Self-Disc",
+                     `Self-Efficacy` = "Self-Eff",
+                     Cautiousness= "Caution",
+                     Dutifulness = "Duty",
+                     Orderliness = "Order")
+#library(ggsignif)
+facet_labs <- longer_df %>% 
+  filter(!duplicated(Variable)) %>% 
+  #arrange(Variable) %>% 
+  select(Variable)
+label_df <- data.frame(xloc = 1:7,
+                       Variable = facet_labs,
+                       Value = rep(5.2, 7)) %>% 
+  left_join(outs %>% select(Variable,d,sig.stars), by = "Variable") %>% 
+  arrange(desc(d)) %>% 
+  mutate(d_str = str_c("d = ", d),
+         Variable = recode(Variable, !!!shorter_vars))
+
+longer_df <- longer_df %>% 
+  mutate(Variable = recode_factor(Variable, !!!shorter_vars))
+longer_df$Variable <- factor(longer_df$Variable, levels = label_df$Variable)
+
+p<-ggplot(longer_df, aes(Variable, Mean, fill=`ADHD Group`))+
+  geom_boxplot()+
+  theme_bw()+
+  ylim(bottom = 1, top=5.4)+
+  annotate("text", x = label_df$xloc, 
+           y = label_df$Value,
+           label = label_df$sig.stars)+
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank())+
+  theme(text=element_text(family="Times New Roman",size=16),
+        axis.text.x =element_text(size=14,angle=45,hjust=1),
+        axis.text.y=element_text(size=14),
+        axis.title.x = element_blank())+
+  labs(title = "Conscientiousness Scores by ADHD Group",
+       y = "Score")+
+  theme(legend.position = "right")+
+  scale_fill_manual("ADHD Group", 
+                    values = c("ADHD" = "#7FB3D5","Non-ADHD" = "#F5B041"))
+print(p)
+save_plot(paste0(output,"consc_facets.png"),p,dpi=200)
+
+```
+
+```{r,fig.height=6,fig.width=7}
+consc_codes <- codes %>% filter(str_starts(original_name, "C"))
+df["pid"] <- 1:nrow(df)
+longer_df <- df %>% 
+  select(adhd_grp, all_of(c("consc",consc_codes$new_name))) %>% 
+  pivot_longer(cols=all_of(c("consc",consc_codes$new_name))) %>% 
+  mutate(Variable = str_to_title(name),
+         `ADHD Group` = adhd_grp,
+         Mean = value)
+#library(ggsignif)
+facet_labs <- longer_df %>% 
+  filter(!duplicated(Variable)) %>% 
+  arrange(Variable) %>% 
+  select(Variable)
+label_df <- data.frame(xloc = 1:7,
+                       Variable = facet_labs,
+                       Value = rep(5.2, 7)) %>% 
+  left_join(outs %>% select(Variable,d,sig.stars), by = "Variable") %>% 
+  mutate(d = str_c("d = ", d))
+longer_df$Variable[longer_df$Variable=="Achievement-Striving"] <- "Achievement-\nStriving"
+longer_df$Variable[longer_df$Variable=="Consc"] <- "Conscientiousness"
+longer_df$Variable <- factor(longer_df$Variable)
+longer_df$Variable <- relevel(longer_df$Variable, ref="Conscientiousness")
+p<-ggplot(longer_df, aes(Variable, Mean, fill=`ADHD Group`))+
+  geom_boxplot()+
+  theme_bw()+
+  ylim(bottom = 1, top=5.5)+
+  annotate("text", x = label_df$xloc, y = label_df$Value,
+           label = label_df$sig.stars)+
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank())+
+  theme(text=element_text(family="Times New Roman",size=14),
+        axis.text.x =element_text(size=12,angle=45,hjust=1),
+        axis.text.y=element_text(size=12),
+        axis.title.x = element_blank())+
+  labs(title = "Conscientiousness and Facet Scores by ADHD Group",
+       y = "Score")
+print(p)
+save_plot(paste0(output, "consc_facets.png"),p,dpi=200,base_width = 7)
+```
+
+```{r}
+
+p_load(cocor)
+tmp.rename <- df %>% 
+  rename_with(~str_remove_all(.x, "[-]"))
+
+print("self-discipline comparisons")
+cocor(~orderliness+asrs_sum | selfdiscipline+asrs_sum, data = tmp.rename,
+      test = c("hittner2003","zou2007"))
+cocor(~dutifulness+asrs_sum | selfdiscipline+asrs_sum, data = tmp.rename,
+      test = c("hittner2003","zou2007"))
+cocor(~selfefficacy+asrs_sum | selfdiscipline+asrs_sum, data = tmp.rename,
+      test = c("hittner2003","zou2007"))
+cocor(~cautiousness+asrs_sum | selfdiscipline+asrs_sum, data = tmp.rename,
+      test = c("hittner2003","zou2007"))
+cocor(~achievementstriving+asrs_sum | selfdiscipline+asrs_sum, data = tmp.rename,
+      test = c("hittner2003","zou2007"))
+
+print("self-efficacy comparisons")
+cocor(~orderliness+asrs_sum | selfefficacy+asrs_sum, data = tmp.rename,
+      test = c("hittner2003","zou2007"))
+cocor(~dutifulness+asrs_sum | selfefficacy+asrs_sum, data = tmp.rename,
+      test = c("hittner2003","zou2007"))
+cocor(~selfefficacy+asrs_sum | achievementstriving+asrs_sum, data = tmp.rename,
+      test = c("hittner2003","zou2007"))
+cocor(~selfefficacy+asrs_sum | cautiousness+asrs_sum, data = tmp.rename,
+      test = c("hittner2003","zou2007"))
+
+print("dutifulness comparisons")
+cocor(~dutifulness+asrs_sum | achievementstriving+asrs_sum, data = tmp.rename,
+      test = c("hittner2003","zou2007"))
+cocor(~dutifulness+asrs_sum | cautiousness+asrs_sum, data = tmp.rename,
+      test = c("hittner2003","zou2007"))
+cocor(~orderliness+asrs_sum | dutifulness+asrs_sum, data = tmp.rename,
+      test = c("hittner2003","zou2007"))
+
+print("cautiousness comparisons")
+cocor(~orderliness+asrs_sum | cautiousness+asrs_sum, data = tmp.rename,
+      test = c("hittner2003","zou2007"))
+cocor(~cautiousness+asrs_sum | achievementstriving+asrs_sum, data = tmp.rename,
+      test = c("hittner2003","zou2007"))
+
+print("orderliness achievement striving comparisons")
+cocor(~orderliness+asrs_sum | achievementstriving+asrs_sum, data = tmp.rename,
+      test = c("hittner2003","zou2007"))
+
+
+
+```
+
+
+# Plot Big Five scores
+
+```{r}
+trait_labs <- c("open", "consc", "extr", "agree", "neur")
+longer_df <- df %>% 
+  select(adhd_grp, all_of(trait_labs)) %>% 
+  pivot_longer(cols=all_of(trait_labs)) %>% 
+  mutate(Variable = recode(name, 
+                        !!!trait_recode),
+         `ADHD Group` = adhd_grp,
+         Mean = value)
+
+trait_labs <- longer_df %>% 
+  filter(!duplicated(Variable)) %>% 
+  arrange(Variable) %>% 
+  select(Variable)
+
+label_df <- data.frame(xloc = 1:5,
+                       Variable = trait_labs,
+                       Value = rep(5.2, 5)) %>% 
+  left_join(outs %>% select(Variable,d,sig.stars), by = "Variable") %>% 
+  mutate(d = str_c("d = ", d))
+
+ggplot(longer_df, aes(Variable, Mean, fill=`ADHD Group`))+
+  geom_boxplot()+
+  theme_bw()+
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank())+
+  theme(text=element_text(family="Times New Roman",size=12),
+        axis.text.x =element_text(size=12,angle=45,hjust=1),
+        axis.text.y=element_text(size=12),
+        axis.title.x = element_blank())+
+  annotate("text", x = label_df$xloc, y = label_df$Value,
+           label = label_df$sig.stars)+
+  labs(title = "Trait Scores by ADHD Group",
+       y = "Trait Score")
+save_plot(paste0(output,"traitscores.png"),p,dpi=200)#save local
+```
+
+Get standardized mean difference table:
+
+```{r}
+consc_codes <- codes %>% filter(str_starts(original_name, "C"))
+
+tmp.means <- df %>% 
+  select(all_of(c(consc_codes$new_name, "consc", "adhd_grp"))) %>% 
+  group_by(adhd_grp) %>% 
+  summarise(across(everything(),
+                    ~paste0(
+                     number(mean(.x), accuracy = .01),
+                     " (",
+                     number(sd(.x), accuracy = .01),
+                     ")"
+                   ))) %>%
+  pivot_longer(cols=-adhd_grp) %>% 
+  pivot_wider(id_cols=name, values_from=value,names_from=adhd_grp) 
+
+tmp.outs <- outs %>% 
+  select(varname, Variable, mdiff, d) %>% 
+  rename(name = varname)
+tmp.means <- left_join(tmp.means, tmp.outs, by = "name")
+tmp.means <- tmp.means %>% 
+  select(Variable, ADHD, `Non-ADHD`, mdiff, d)
+write.csv(tmp.means, paste0(output,"output_means_summary.csv"))
+p_load(flextable)
+tmp.means %>% 
+  flextable()
+```
+
+
+
+## Measurement invariance
+Set up the invariance analysis:
+
+```{r,message=F}
+#load lavaan
+#semTools command for a series of multiple group models
+p_load(lavaan, semTools)
+
+consc_codes <- codes %>% filter(str_starts(original_name, "C"))
+selfeff <- paste(colnames(df %>% select(starts_with("C1")) %>% select(-ends_with("_R"))),
+                 collapse = " + ")
+order <- paste(colnames(df %>% select(starts_with("C2"))%>% select(-ends_with("_R"))),
+               collapse = " + ")
+duty <- paste(colnames(df %>% select(starts_with("C3"))%>% select(-ends_with("_R"))),
+              collapse = " + ")
+achieve <- paste(colnames(df %>% select(starts_with("C4"))%>% select(-ends_with("_R"))),
+                 collapse = " + ")
+selfdisc <- paste(colnames(df %>% select(starts_with("C5"))%>% select(-ends_with("_R"))),
+                  collapse = " + ")
+caution <- paste(colnames(df %>% select(starts_with("C6"))%>% select(-ends_with("_R"))),
+                 collapse = " + ")
+var_descr <- var_descr %>% 
+  mutate(facet = case_when(
+    str_starts(original_varname, "C1_")~"self-efficacy",
+    str_starts(original_varname, "C2_")~"orderliness",
+    str_starts(original_varname, "C3_")~"dutifulness",
+    str_starts(original_varname, "C4_")~"achievement-striving",
+    str_starts(original_varname, "C5_")~"self-discipline",
+    str_starts(original_varname, "C6_")~"cautiousness"
+  )
+         )
+#specify the factor structure
+facstruc <- paste0("\nselfeff =~ ", selfeff, "\n",
+                  "order =~ ", order, "\n",
+                  "duty =~ ", duty, "\n",
+                  "achieve =~ ", achieve, "\n",
+                  "selfdisc =~ " , selfdisc, "\n",
+                  "caution =~ ", caution, "\n")
+```
+
+Configural Invariance:
+
+```{r}
+
+cat("  \nCONFIGURAL INVARIANCE  \n")
+config <- cfa(facstruc,
+              data=df,
+              group="adhd_grp")
+#summary(config,fit.measures=TRUE)#seems like the multigroup model fit is acceptable
+#create fit dataframe
+fitm.config <- t(data.frame(fitMeasures(config,
+            c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "rmsea.ci.lower", "rmsea.ci.upper",
+              "srmr"))))
+fitm.config <- apply(fitm.config, 2, 
+                     function(x) number(x, accuracy = .01))
+
+fitm.config["Model"] <- "M1 Configural Invariance" #store fit  in dataframe
+```
+
+Metric invariance:
+
+```{r}
+cat("  \nMETRIC INVARIANCE  \n")
+metric <- cfa(facstruc, 
+              data=df, 
+              group="adhd_grp",
+              group.equal=c("loadings"))
+#summary(metric,fit.measures=TRUE)
+
+anova(metric, config)
+metric.config.comp <- compareFit(config, metric)
+#summary(metric.config.comp)
+
+#save model comparison to local excel file
+#for some reason it's still appending despite append = F, so we'll just save a blank file 
+empty.df <- data.frame()
+write.csv(empty.df, paste0(output,"partial_invariance_comps.csv"))
+saveFile(metric.config.comp,
+         tableFormat = T,
+         fit.measures = c("chisq", "df", "pvalue", "cfi", "tli", 
+                          "rmsea", "rmsea.ci.lower", "rmsea.ci.upper",
+              "srmr"),
+         file=paste0(output,"partial_invariance_comps.csv"), writeArgs = list(sep=",",
+                                                               append=F))
+
+summary(metric.config.comp)#looks like the simpler model (metric invariance) fits just as well as the complex model (configural invariance)
+fitm.metric <- t(data.frame(fitMeasures(metric,
+            c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "rmsea.ci.lower", "rmsea.ci.upper",
+              "srmr"))))
+fitm.metric <- apply(fitm.metric, 2, function(x) number(x, accuracy = .01))#store fit in dataframe
+fitm.metric["Model"] <- "M2 Metric Invariance" 
+fitm.config<- rbind(fitm.config, fitm.metric)#bind m1 fit with this model's fit
+
+```
+
+Scalar invariance: 
+
+```{r}
+cat("  \nSCALAR INVARIANCE  \n")
+scalar <- cfa(facstruc, 
+              data=df, 
+              group="adhd_grp",
+              group.equal=c("loadings",
+                            "intercepts"))
+#summary(scalar,fit.measures=TRUE) #scalar invariance model looks pretty comparable to metric invariance
+anova(scalar, metric)#but the ANOVA is significant, which suggests noninvariance
+scalar.metric.comp <- compareFit(metric, scalar)
+#save the model comparisons locally
+saveFile(scalar.metric.comp,
+         tableFormat = T,
+         fit.measures = c("chisq", "df", "pvalue", 
+                          "cfi", "tli", "rmsea", 
+                          "rmsea.ci.lower", "rmsea.ci.upper",
+                          "srmr"),
+         file=paste0(output,"partial_invariance_comps.csv"), 
+         writeArgs = list(append=T, sep=","))
+
+fitm.scalar <- t(data.frame(fitMeasures(scalar,
+                                        c("chisq", "df", "pvalue", "cfi", 
+                                          "tli", "rmsea", "rmsea.ci.lower", 
+                                          "rmsea.ci.upper","srmr"))))
+#store model fit in dataframe and bind
+fitm.scalar <- apply(fitm.scalar, 2, function(x) number(x, accuracy = .01))
+fitm.scalar["Model"] <- "M3 Scalar Invariance"
+fitm.config<- rbind(fitm.config, fitm.scalar)
+summary(scalar.metric.comp)#looks like the simpler model (metric invariance) fits worse than the more complex model (scalar)
+```
+
+Inspect the items that are likely sources of non-invariance:
+
+```{r}
+#look at items that are performing differently
+#lavTestScore(scalar)
+scalar_lavtest <- lavTestScore(scalar)
+scalar_lavtest <- data.frame(scalar_lavtest$uni)
+naughty <- scalar_lavtest %>% filter(p.value < .05)
+ptabs <- parTable(scalar)
+naughty_items <- ptabs %>% 
+  filter(plabel %in% c(naughty$lhs, naughty$rhs))
+naughty_items["eq"] <- str_c(naughty_items$lhs, " ", naughty_items$op, " ", naughty_items$rhs)
+#look at the naughty items
+naughty_item_wording <- var_descr %>% 
+  filter(str_remove(original_varname,"_R") %in% c(naughty_items$lhs, naughty_items$rhs))
+naughty_item_wording$clean_var_desc <- str_replace(naughty_item_wording$clean_var_desc, "[.]", "")
+cat(paste0("The modification index tests the improvement in model fit if the equality constraints for individual parameters were released. This test suggested that releasing equality constraints on the intercepts of ",
+           'two items from the dutifulness scale ("', naughty_item_wording$clean_var_desc[1], '" and "',
+           naughty_item_wording$clean_var_desc[2], '"), ', 'one item from the self-discipline scale ("',
+           naughty_item_wording$clean_var_desc[3], '"), and one item from the cautiousness scale ("',
+           naughty_item_wording$clean_var_desc[4], '") would improve model fit. ')
+    )
+cat(paste0('The modification index test also indicated that releasing the equality constraint on the loading of one item on the cautiousness scale ("', naughty_item_wording$clean_var_desc[4], '") would improve model fit. '))
+```
+
+
+
+```{r}
+partial.scalar <- cfa(facstruc, 
+              data=df, 
+              group="adhd_grp",
+              group.equal=c("loadings",
+                            "intercepts"),
+              group.partial = naughty_items$eq[!duplicated(naughty_items$eq)])
+partial.scalar.comp <- compareFit(metric, partial.scalar)
+#save the model comparisons locally
+saveFile(partial.scalar.comp,
+         tableFormat = T,
+         fit.measures = c("chisq", "df", "pvalue", "cfi", 
+                          "tli", "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"),
+         file=paste0(output,"partial_invariance_comps.csv"), 
+         writeArgs = list(append=T, sep=","))
+
+summary(partial.scalar.comp)
+fitm.partial.scalar <- t(data.frame(fitMeasures(partial.scalar,
+            c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "rmsea.ci.lower", "rmsea.ci.upper",
+              "srmr"))))
+fitm.partial.scalar <- apply(fitm.partial.scalar, 2, function(x) number(x, accuracy = .01))
+fitm.partial.scalar["Model"] <- "M3a Partial Scalar Invariance"
+fitm.config<- rbind(fitm.config, fitm.partial.scalar)
+
+fitm.config <- data.frame(fitm.config)
+fitm.config["chisq.df"] <- str_c(fitm.config$chisq, " (", str_replace(fitm.config$df, ".00", ""), ")")
+#save local
+write.csv(fitm.config, paste0(output,"partial_invariance_model.csv"))
+
+```
+
+```{r}
+#as a reminder, these equality constraints needed to be released:
+naughty_items$eq[!duplicated(naughty_items$eq)]
+```
+
+```{r}
+naughty_item_wording
+```
+
+
+```{r}
+#how different are the loadings and intercepts with equality constraints released?
+summary(partial.scalar)
+```
+
+```{r}
+mod.params <- as.data.frame(unclass(parameterEstimates(partial.scalar))) %>% 
+  mutate(group = if_else(group==1, "NonADHD", "ADHD")) %>% 
+  filter(lhs != rhs) %>% 
+  select(lhs, op, rhs, group, label, est, se) %>% 
+  pivot_wider(names_from=group,values_from=c(est,se))
+mod.params$param <- str_c(mod.params$lhs, " ", mod.params$op, " ",mod.params$rhs)
+mod.params <- mod.params %>% 
+  mutate(est_se_nonadhd = str_c(number(est_NonADHD, accuracy = .01),
+                                " (",
+                                number(se_NonADHD, accuracy = .01),
+                                ")"),
+         est_se_adhd = str_c(number(est_ADHD, accuracy = .01),
+                                " (",
+                                number(se_ADHD, accuracy = .01),
+                                ")"))
+mod.params$naughty <- mod.params$param %in% naughty_items$eq[!duplicated(naughty_items$eq)]
+mod.params$est_se_adhd <- ifelse(mod.params$naughty==T,
+                              mod.params$est_se_adhd,
+                              "")
+mod.params <- mod.params %>% 
+  select(param, est_se_nonadhd,est_se_adhd,naughty)
+write.csv(mod.params, paste0(output, "model_parameters_partial_scalar.csv"))
+```
+
+

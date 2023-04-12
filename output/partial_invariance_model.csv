@@ -1,0 +1,5 @@
+"","chisq","df","pvalue","cfi","tli","rmsea","rmsea.ci.lower","rmsea.ci.upper","srmr","Model","chisq.df"
+"fitm.config","802.99","474.00","0.00","0.91","0.89","0.07","0.06","0.08","0.07","M1 Configural Invariance","802.99 (474)"
+"fitm.metric","816.26","492.00","0.00","0.91","0.90","0.07","0.06","0.08","0.07","M2 Metric Invariance","816.26 (492)"
+"fitm.scalar","855.03","510.00","0.00","0.90","0.90","0.07","0.06","0.08","0.07","M3 Scalar Invariance","855.03 (510)"
+"fitm.partial.scalar","823.62","505.00","0.00","0.91","0.90","0.07","0.06","0.07","0.07","M3a Partial Scalar Invariance","823.62 (505)"

@@ -1,0 +1,8 @@
+.DS_Store
+data/.DS_Store
+output/.DS_Store
+.RHistory
+.RData
+data/big_five*
+data/cleaned_data.csv
+calculate_adhd_scores.R
