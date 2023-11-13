@@ -613,9 +613,7 @@ p<-ggplot(df, aes(asrs_sum,fill=adhd_yn))+
         axis.text.x = element_text(size=14),
         axis.text.y = element_text(size=14),
         legend.text = element_text(size=14))+
-  theme(legend.position = "bottom")+
-  scale_fill_manual("ADHD Self-ID", 
-                    values = c("No" = "#F5B041", "Yes" = "#117864", "Not sure" = "#48C9B0"))
+  theme(legend.position = "bottom")
 print(p)
 save_plot(paste0(output,"adhd_sx_screener.png"), p)
 ```
@@ -628,7 +626,7 @@ longer_df <- df %>%
   pivot_longer(cols=all_of(c("consc",consc_codes$new_name))) %>% 
   mutate(Variable = str_to_title(name),
          Variable = str_replace(Variable, "Consc", "Conscientiousness"),
-         `ADHD Group` = adhd_grp,
+         `ADHD Group` = factor(adhd_grp, levels=c("Non-ADHD", "ADHD")),
          Mean = value)
 
 shorter_vars <- list(Conscientiousness = "Global Consc.",
@@ -670,11 +668,9 @@ p<-ggplot(longer_df, aes(Variable, Mean, fill=`ADHD Group`))+
         axis.title.x = element_blank())+
   labs(title = "Conscientiousness Scores by ADHD Group",
        y = "Score")+
-  theme(legend.position = "right")+
-  scale_fill_manual("ADHD Group", 
-                    values = c("ADHD" = "#7FB3D5","Non-ADHD" = "#F5B041"))
+  theme(legend.position = "right")
 print(p)
-save_plot(paste0(output,"consc_facets.png"),p,dpi=200)
+#save_plot(paste0(output,"consc_facets.png"),p,dpi=200)
 
 ```
 
@@ -685,7 +681,7 @@ longer_df <- df %>%
   select(adhd_grp, all_of(c("consc",consc_codes$new_name))) %>% 
   pivot_longer(cols=all_of(c("consc",consc_codes$new_name))) %>% 
   mutate(Variable = str_to_title(name),
-         `ADHD Group` = adhd_grp,
+         `ADHD Group` = factor(adhd_grp, levels=c("Non-ADHD", "ADHD")),
          Mean = value)
 #library(ggsignif)
 facet_labs <- longer_df %>% 
