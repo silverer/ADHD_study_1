@@ -657,9 +657,6 @@ p<-ggplot(longer_df, aes(Variable, Mean, fill=`ADHD Group`))+
   geom_boxplot()+
   theme_bw()+
   ylim(bottom = 1, top=5.4)+
-  annotate("text", x = label_df$xloc, 
-           y = label_df$Value,
-           label = label_df$sig.stars)+
   theme(panel.grid.major=element_blank(),
         panel.grid.minor=element_blank())+
   theme(text=element_text(family="Times New Roman",size=16),
@@ -674,7 +671,9 @@ print(p)
 
 ```
 
-```{r,fig.height=6,fig.width=7}
+Black and white figure:
+
+```{r}
 consc_codes <- codes %>% filter(str_starts(original_name, "C"))
 df["pid"] <- 1:nrow(df)
 longer_df <- df %>% 
@@ -697,6 +696,26 @@ longer_df$Variable[longer_df$Variable=="Achievement-Striving"] <- "Achievement-\
 longer_df$Variable[longer_df$Variable=="Consc"] <- "Conscientiousness"
 longer_df$Variable <- factor(longer_df$Variable)
 longer_df$Variable <- relevel(longer_df$Variable, ref="Conscientiousness")
+p<-ggplot(longer_df, aes(Variable, Mean, fill=`ADHD Group`))+
+  geom_boxplot()+
+  theme_bw()+
+  ylim(bottom = 1, top=5.5)+
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank())+
+  theme(text=element_text(family="Times New Roman",size=14),
+        axis.text.x =element_text(size=12,angle=45,hjust=1),
+        axis.text.y=element_text(size=12),
+        axis.title.x = element_blank())+
+  labs(title = "Conscientiousness and Facet Scores by ADHD Group",
+       y = "Score")+
+  scale_fill_manual(values=c("white","grey"))
+print(p)
+save_plot(paste0(output, "consc_facets.png"),p,dpi=200,base_width = 7)
+```
+
+
+
+```{r,fig.height=6,fig.width=7}
 p<-ggplot(longer_df, aes(Variable, Mean, fill=`ADHD Group`))+
   geom_boxplot()+
   theme_bw()+
@@ -833,234 +852,6 @@ write.csv(tmp.means, paste0(output,"output_means_summary.csv"))
 p_load(flextable)
 tmp.means %>% 
   flextable()
-```
-
-
-
-## Measurement invariance
-Set up the invariance analysis:
-
-```{r,message=F}
-#load lavaan
-#semTools command for a series of multiple group models
-p_load(lavaan, semTools)
-
-consc_codes <- codes %>% filter(str_starts(original_name, "C"))
-selfeff <- paste(colnames(df %>% select(starts_with("C1")) %>% select(-ends_with("_R"))),
-                 collapse = " + ")
-order <- paste(colnames(df %>% select(starts_with("C2"))%>% select(-ends_with("_R"))),
-               collapse = " + ")
-duty <- paste(colnames(df %>% select(starts_with("C3"))%>% select(-ends_with("_R"))),
-              collapse = " + ")
-achieve <- paste(colnames(df %>% select(starts_with("C4"))%>% select(-ends_with("_R"))),
-                 collapse = " + ")
-selfdisc <- paste(colnames(df %>% select(starts_with("C5"))%>% select(-ends_with("_R"))),
-                  collapse = " + ")
-caution <- paste(colnames(df %>% select(starts_with("C6"))%>% select(-ends_with("_R"))),
-                 collapse = " + ")
-var_descr <- var_descr %>% 
-  mutate(facet = case_when(
-    str_starts(original_varname, "C1_")~"self-efficacy",
-    str_starts(original_varname, "C2_")~"orderliness",
-    str_starts(original_varname, "C3_")~"dutifulness",
-    str_starts(original_varname, "C4_")~"achievement-striving",
-    str_starts(original_varname, "C5_")~"self-discipline",
-    str_starts(original_varname, "C6_")~"cautiousness"
-  )
-         )
-#specify the factor structure
-facstruc <- paste0("\nselfeff =~ ", selfeff, "\n",
-                  "order =~ ", order, "\n",
-                  "duty =~ ", duty, "\n",
-                  "achieve =~ ", achieve, "\n",
-                  "selfdisc =~ " , selfdisc, "\n",
-                  "caution =~ ", caution, "\n")
-```
-
-Configural Invariance:
-
-```{r}
-
-cat("  \nCONFIGURAL INVARIANCE  \n")
-config <- cfa(facstruc,
-              data=df,
-              group="adhd_grp")
-#summary(config,fit.measures=TRUE)#seems like the multigroup model fit is acceptable
-#create fit dataframe
-fitm.config <- t(data.frame(fitMeasures(config,
-            c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "rmsea.ci.lower", "rmsea.ci.upper",
-              "srmr"))))
-fitm.config <- apply(fitm.config, 2, 
-                     function(x) number(x, accuracy = .01))
-
-fitm.config["Model"] <- "M1 Configural Invariance" #store fit  in dataframe
-```
-
-Metric invariance:
-
-```{r}
-cat("  \nMETRIC INVARIANCE  \n")
-metric <- cfa(facstruc, 
-              data=df, 
-              group="adhd_grp",
-              group.equal=c("loadings"))
-#summary(metric,fit.measures=TRUE)
-
-anova(metric, config)
-metric.config.comp <- compareFit(config, metric)
-#summary(metric.config.comp)
-
-#save model comparison to local excel file
-#for some reason it's still appending despite append = F, so we'll just save a blank file 
-empty.df <- data.frame()
-write.csv(empty.df, paste0(output,"partial_invariance_comps.csv"))
-saveFile(metric.config.comp,
-         tableFormat = T,
-         fit.measures = c("chisq", "df", "pvalue", "cfi", "tli", 
-                          "rmsea", "rmsea.ci.lower", "rmsea.ci.upper",
-              "srmr"),
-         file=paste0(output,"partial_invariance_comps.csv"), writeArgs = list(sep=",",
-                                                               append=F))
-
-summary(metric.config.comp)#looks like the simpler model (metric invariance) fits just as well as the complex model (configural invariance)
-fitm.metric <- t(data.frame(fitMeasures(metric,
-            c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "rmsea.ci.lower", "rmsea.ci.upper",
-              "srmr"))))
-fitm.metric <- apply(fitm.metric, 2, function(x) number(x, accuracy = .01))#store fit in dataframe
-fitm.metric["Model"] <- "M2 Metric Invariance" 
-fitm.config<- rbind(fitm.config, fitm.metric)#bind m1 fit with this model's fit
-
-```
-
-Scalar invariance: 
-
-```{r}
-cat("  \nSCALAR INVARIANCE  \n")
-scalar <- cfa(facstruc, 
-              data=df, 
-              group="adhd_grp",
-              group.equal=c("loadings",
-                            "intercepts"))
-#summary(scalar,fit.measures=TRUE) #scalar invariance model looks pretty comparable to metric invariance
-anova(scalar, metric)#but the ANOVA is significant, which suggests noninvariance
-scalar.metric.comp <- compareFit(metric, scalar)
-#save the model comparisons locally
-saveFile(scalar.metric.comp,
-         tableFormat = T,
-         fit.measures = c("chisq", "df", "pvalue", 
-                          "cfi", "tli", "rmsea", 
-                          "rmsea.ci.lower", "rmsea.ci.upper",
-                          "srmr"),
-         file=paste0(output,"partial_invariance_comps.csv"), 
-         writeArgs = list(append=T, sep=","))
-
-fitm.scalar <- t(data.frame(fitMeasures(scalar,
-                                        c("chisq", "df", "pvalue", "cfi", 
-                                          "tli", "rmsea", "rmsea.ci.lower", 
-                                          "rmsea.ci.upper","srmr"))))
-#store model fit in dataframe and bind
-fitm.scalar <- apply(fitm.scalar, 2, function(x) number(x, accuracy = .01))
-fitm.scalar["Model"] <- "M3 Scalar Invariance"
-fitm.config<- rbind(fitm.config, fitm.scalar)
-summary(scalar.metric.comp)#looks like the simpler model (metric invariance) fits worse than the more complex model (scalar)
-```
-
-Inspect the items that are likely sources of non-invariance:
-
-```{r}
-#look at items that are performing differently
-#lavTestScore(scalar)
-scalar_lavtest <- lavTestScore(scalar)
-scalar_lavtest <- data.frame(scalar_lavtest$uni)
-naughty <- scalar_lavtest %>% filter(p.value < .05)
-ptabs <- parTable(scalar)
-naughty_items <- ptabs %>% 
-  filter(plabel %in% c(naughty$lhs, naughty$rhs))
-naughty_items["eq"] <- str_c(naughty_items$lhs, " ", naughty_items$op, " ", naughty_items$rhs)
-#look at the naughty items
-naughty_item_wording <- var_descr %>% 
-  filter(str_remove(original_varname,"_R") %in% c(naughty_items$lhs, naughty_items$rhs))
-naughty_item_wording$clean_var_desc <- str_replace(naughty_item_wording$clean_var_desc, "[.]", "")
-cat(paste0("The modification index tests the improvement in model fit if the equality constraints for individual parameters were released. This test suggested that releasing equality constraints on the intercepts of ",
-           'two items from the dutifulness scale ("', naughty_item_wording$clean_var_desc[1], '" and "',
-           naughty_item_wording$clean_var_desc[2], '"), ', 'one item from the self-discipline scale ("',
-           naughty_item_wording$clean_var_desc[3], '"), and one item from the cautiousness scale ("',
-           naughty_item_wording$clean_var_desc[4], '") would improve model fit. ')
-    )
-cat(paste0('The modification index test also indicated that releasing the equality constraint on the loading of one item on the cautiousness scale ("', naughty_item_wording$clean_var_desc[4], '") would improve model fit. '))
-```
-
-
-
-```{r}
-partial.scalar <- cfa(facstruc, 
-              data=df, 
-              group="adhd_grp",
-              group.equal=c("loadings",
-                            "intercepts"),
-              group.partial = naughty_items$eq[!duplicated(naughty_items$eq)])
-partial.scalar.comp <- compareFit(metric, partial.scalar)
-#save the model comparisons locally
-saveFile(partial.scalar.comp,
-         tableFormat = T,
-         fit.measures = c("chisq", "df", "pvalue", "cfi", 
-                          "tli", "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"),
-         file=paste0(output,"partial_invariance_comps.csv"), 
-         writeArgs = list(append=T, sep=","))
-
-summary(partial.scalar.comp)
-fitm.partial.scalar <- t(data.frame(fitMeasures(partial.scalar,
-            c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "rmsea.ci.lower", "rmsea.ci.upper",
-              "srmr"))))
-fitm.partial.scalar <- apply(fitm.partial.scalar, 2, function(x) number(x, accuracy = .01))
-fitm.partial.scalar["Model"] <- "M3a Partial Scalar Invariance"
-fitm.config<- rbind(fitm.config, fitm.partial.scalar)
-
-fitm.config <- data.frame(fitm.config)
-fitm.config["chisq.df"] <- str_c(fitm.config$chisq, " (", str_replace(fitm.config$df, ".00", ""), ")")
-#save local
-write.csv(fitm.config, paste0(output,"partial_invariance_model.csv"))
-
-```
-
-```{r}
-#as a reminder, these equality constraints needed to be released:
-naughty_items$eq[!duplicated(naughty_items$eq)]
-```
-
-```{r}
-naughty_item_wording
-```
-
-
-```{r}
-#how different are the loadings and intercepts with equality constraints released?
-summary(partial.scalar)
-```
-
-```{r}
-mod.params <- as.data.frame(unclass(parameterEstimates(partial.scalar))) %>% 
-  mutate(group = if_else(group==1, "NonADHD", "ADHD")) %>% 
-  filter(lhs != rhs) %>% 
-  select(lhs, op, rhs, group, label, est, se) %>% 
-  pivot_wider(names_from=group,values_from=c(est,se))
-mod.params$param <- str_c(mod.params$lhs, " ", mod.params$op, " ",mod.params$rhs)
-mod.params <- mod.params %>% 
-  mutate(est_se_nonadhd = str_c(number(est_NonADHD, accuracy = .01),
-                                " (",
-                                number(se_NonADHD, accuracy = .01),
-                                ")"),
-         est_se_adhd = str_c(number(est_ADHD, accuracy = .01),
-                                " (",
-                                number(se_ADHD, accuracy = .01),
-                                ")"))
-mod.params$naughty <- mod.params$param %in% naughty_items$eq[!duplicated(naughty_items$eq)]
-mod.params$est_se_adhd <- ifelse(mod.params$naughty==T,
-                              mod.params$est_se_adhd,
-                              "")
-mod.params <- mod.params %>% 
-  select(param, est_se_nonadhd,est_se_adhd,naughty)
-write.csv(mod.params, paste0(output, "model_parameters_partial_scalar.csv"))
 ```
 
 
